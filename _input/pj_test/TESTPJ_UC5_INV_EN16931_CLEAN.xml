@@ -1,0 +1,161 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ccts="urn:un:unece:uncefact:documentation:2"
+    xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
+    xmlns:udt="urn:oasis:names:specification:ubl:schema:xsd:UnqualifiedDataTypes-2">
+    <cbc:UBLVersionID>[PLACEHOLDER]</cbc:UBLVersionID>
+     <cbc:CustomizationID>[PLACEHOLDER]</cbc:CustomizationID>
+     <cbc:ProfileID>[PLACEHOLDER]</cbc:ProfileID>
+     <cbc:ID>[PLACEHOLDER]</cbc:ID>
+     <cbc:IssueDate>[PLACEHOLDER]</cbc:IssueDate>
+     <cbc:DueDate>[PLACEHOLDER]</cbc:DueDate>
+     <cbc:InvoiceTypeCode>[PLACEHOLDER]</cbc:InvoiceTypeCode>
+     <cbc:Note>#REG#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#ABL#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#AAI#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#PMD#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#PMT#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#AAB#[PLACEHOLDER]</cbc:Note>
+     <cbc:Note>#BAR#[PLACEHOLDER]</cbc:Note>
+     <cbc:DocumentCurrencyCode>[PLACEHOLDER]</cbc:DocumentCurrencyCode>
+     <cbc:AccountingCost>[PLACEHOLDER]</cbc:AccountingCost>
+     <cbc:BuyerReference>[PLACEHOLDER]</cbc:BuyerReference>
+     <cac:InvoicePeriod>
+          <cbc:StartDate>[PLACEHOLDER]</cbc:StartDate>
+          <cbc:EndDate>[PLACEHOLDER]</cbc:EndDate>
+          <cbc:DescriptionCode>[PLACEHOLDER]</cbc:DescriptionCode>
+     </cac:InvoicePeriod>
+     <cac:OrderReference>
+          <cbc:ID>[PLACEHOLDER]</cbc:ID>
+          <cbc:SalesOrderID>[PLACEHOLDER]</cbc:SalesOrderID>
+     </cac:OrderReference>
+     <!-- Test ajout pj -->
+     <cac:AdditionalDocumentReference>
+         <cbc:ID>PJ_001</cbc:ID> <!-- BT-122 : Identifiant de la pièce jointe -->
+         <cbc:DocumentTypeCode>916</cbc:DocumentTypeCode> <!-- BT-? : Pas de BT officiel dans EN16931, usage conventionnel --> <!-- 916 = pièce jointe justificative -->
+         <cac:Attachment>
+            <cbc:EmbeddedDocumentBinaryObject mimeCode="application/pdf" filename="piece_joint.pdf">
+                JVBERi0xLjQKJeLjz9MKMSAwIG9iago8PAov...
+            </cbc:EmbeddedDocumentBinaryObject> <!-- BT-125-1 : Type MIME de la pièce jointe --> <!-- BT-125-2 : Nom du fichier de la pièce jointe --> <!-- BT-125 : Contenu de la pièce jointe (Base64) -->
+         </cac:Attachment>
+     </cac:AdditionalDocumentReference>
+     <!-- -->
+     <cac:AccountingSupplierParty>
+          <cac:Party>
+               <cbc:EndpointID schemeID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:EndpointID>
+               <cac:PartyName>
+                    <cbc:Name>[PLACEHOLDER]</cbc:Name>
+               </cac:PartyName>
+               <cac:PostalAddress>
+                    <cbc:StreetName>[PLACEHOLDER]</cbc:StreetName>
+                    <cbc:AdditionalStreetName>[PLACEHOLDER]</cbc:AdditionalStreetName>
+                    <cbc:CityName>[PLACEHOLDER]</cbc:CityName>
+                    <cbc:PostalZone>[PLACEHOLDER]</cbc:PostalZone>
+                    <cac:Country>
+                         <cbc:IdentificationCode>[PLACEHOLDER]</cbc:IdentificationCode>
+                    </cac:Country>
+               </cac:PostalAddress>
+               <cac:PartyTaxScheme>
+                    <cbc:CompanyID>[PLACEHOLDER]</cbc:CompanyID>
+                    <cac:TaxScheme>
+                         <cbc:ID>[PLACEHOLDER]</cbc:ID>
+                    </cac:TaxScheme>
+               </cac:PartyTaxScheme>
+               <cac:PartyLegalEntity>
+                    <cbc:RegistrationName>[PLACEHOLDER]</cbc:RegistrationName>
+                    <cbc:CompanyID schemeID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:CompanyID>
+                    <cbc:CompanyLegalForm>[PLACEHOLDER]</cbc:CompanyLegalForm>
+               </cac:PartyLegalEntity>
+               <cac:Contact>
+                    <cbc:Telephone>[PLACEHOLDER]</cbc:Telephone>
+                    <cbc:ElectronicMail>[PLACEHOLDER]</cbc:ElectronicMail>
+               </cac:Contact>
+          </cac:Party>
+     </cac:AccountingSupplierParty>
+     <cac:AccountingCustomerParty>
+          <cac:Party>
+               <cbc:EndpointID schemeID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:EndpointID>
+               <cac:PartyIdentification>
+                    <cbc:ID schemeID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:ID>
+               </cac:PartyIdentification>
+               <cac:PostalAddress>
+                    <cbc:StreetName>[PLACEHOLDER]</cbc:StreetName>
+                    <cbc:AdditionalStreetName>[PLACEHOLDER]</cbc:AdditionalStreetName>
+                    <cbc:CityName>[PLACEHOLDER]</cbc:CityName>
+                    <cbc:PostalZone>[PLACEHOLDER]</cbc:PostalZone>
+                    <cac:Country>
+                         <cbc:IdentificationCode>[PLACEHOLDER]</cbc:IdentificationCode>
+                    </cac:Country>
+               </cac:PostalAddress>
+               <cac:PartyTaxScheme>
+                    <cbc:CompanyID>F[PLACEHOLDER]</cbc:CompanyID>
+                    <cac:TaxScheme>
+                         <cbc:ID>[PLACEHOLDER]</cbc:ID>
+                    </cac:TaxScheme>
+               </cac:PartyTaxScheme>
+               <cac:PartyLegalEntity>
+                    <cbc:RegistrationName>[PLACEHOLDER]</cbc:RegistrationName>
+               </cac:PartyLegalEntity>
+               <cac:Contact>
+                    <cbc:Telephone>[PLACEHOLDER]</cbc:Telephone>
+                    <cbc:ElectronicMail>[PLACEHOLDER]</cbc:ElectronicMail>
+               </cac:Contact>
+          </cac:Party>
+     </cac:AccountingCustomerParty>
+     <cac:Delivery>
+          <cac:DeliveryLocation>
+               <cac:Address>
+                    <cbc:StreetName>[PLACEHOLDER]</cbc:StreetName>
+                    <cbc:AdditionalStreetName>[PLACEHOLDER]</cbc:AdditionalStreetName>
+                    <cbc:CityName>[PLACEHOLDER]</cbc:CityName>
+                    <cbc:PostalZone>[PLACEHOLDER]</cbc:PostalZone>
+                    <cac:Country>
+                         <cbc:IdentificationCode>[PLACEHOLDER]</cbc:IdentificationCode>
+                    </cac:Country>
+               </cac:Address>
+          </cac:DeliveryLocation>
+          <cac:DeliveryParty>
+               <cac:PartyName>
+                    <cbc:Name>[PLACEHOLDER]</cbc:Name>
+               </cac:PartyName>
+          </cac:DeliveryParty>
+     </cac:Delivery>
+     <cac:PaymentMeans>
+          <cbc:PaymentMeansCode name="[PLACEHOLDER]">[PLACEHOLDER]</cbc:PaymentMeansCode>
+          <cbc:PaymentID>[PLACEHOLDER]</cbc:PaymentID>
+          <cac:PayeeFinancialAccount>
+               <cbc:ID>[PLACEHOLDER]</cbc:ID>
+               <cbc:Name>[PLACEHOLDER]</cbc:Name>
+               <cac:FinancialInstitutionBranch>
+                    <cbc:ID>[PLACEHOLDER]</cbc:ID>
+               </cac:FinancialInstitutionBranch>
+          </cac:PayeeFinancialAccount>
+     </cac:PaymentMeans>
+     <cac:PaymentTerms>
+          <cbc:Note>[PLACEHOLDER]</cbc:Note>
+     </cac:PaymentTerms>
+     <cac:TaxTotal>
+          <cbc:TaxAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:TaxAmount>
+          <cac:TaxSubtotal>
+               <cbc:TaxableAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:TaxableAmount>
+               <cbc:TaxAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:TaxAmount>
+               <cac:TaxCategory>
+                    <cbc:ID>[PLACEHOLDER]</cbc:ID>
+                    <cbc:Percent>[PLACEHOLDER]</cbc:Percent>
+                    <cac:TaxScheme>
+                         <cbc:ID>[PLACEHOLDER]</cbc:ID>
+                    </cac:TaxScheme>
+               </cac:TaxCategory>
+          </cac:TaxSubtotal>
+     </cac:TaxTotal>
+     <cac:LegalMonetaryTotal>
+          <cbc:LineExtensionAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:LineExtensionAmount>
+          <cbc:TaxExclusiveAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:TaxExclusiveAmount>
+          <cbc:TaxInclusiveAmount currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:TaxInclusiveAmount>
+          <cbc:PayableAmount  currencyID="[PLACEHOLDER]">[PLACEHOLDER]</cbc:PayableAmount>
+     </cac:LegalMonetaryTotal>
+     <!-- cac:InvoiceLine -->
+</Invoice>
