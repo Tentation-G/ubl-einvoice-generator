@@ -6,12 +6,13 @@
      <cbc:ID>26140022</cbc:ID>
      <cbc:IssueDate>2026-01-20</cbc:IssueDate>
      <cbc:CreditNoteTypeCode>381</cbc:CreditNoteTypeCode>
-     <cbc:Note>#REG#VENDEUR SARL au capital de 50 000 EUR</cbc:Note>
-     <cbc:Note>#ABL#RCS MAVILLE 100 000 009</cbc:Note>
-     <cbc:Note>#AAI#35 ma rue a moi,75018 PARIS, FR – contact@vendeur.fr - www.levendeur.fr  – N° TVA : FR88 100 000 009</cbc:Note>
-     <cbc:Note>#PMD#Tout retard de paiement engendre une pénalité exigible à compter de la date d'échéance, calculée sur la base de trois fois le taux d'intérêt légal. </cbc:Note>
-     <cbc:Note>#PMT#Indemnité forfaitaire pour frais de recouvrement en cas de retard de paiement : 40 €.</cbc:Note>
-     <cbc:Note>#AAB#Les réglements reçus avant la date d'échéance ne donneront pas lieu à escompte.</cbc:Note>
+     <cbc:Note>#REG#SESEM SAS au capital de 289 000€</cbc:Note>
+     <cbc:Note>#ABL#RCS Bobigny - APE 4322B</cbc:Note>
+     <cbc:Note>#AAI#70 74 rue Ambroise Croizat La Manufacture CS 40001 93207 SAINT DENIS Cedex - www.sesem.fr - contact@sesem.fr - N° TVA :FR88 652 022 062</cbc:Note>
+     <cbc:Note>#PMD#Tout retard de paiement engendre une pénalité exigible à compter de la date d échéance, calculée sur la base de trois fois le taux d intérêt légal.</cbc:Note>
+     <cbc:Note>#PMT#Indemnité forfaitaire frais de recouvrement: 40 Euro (décret du 02 octobre 2012)</cbc:Note>
+     <cbc:Note>#AAB#Les réglements reçus avant la date d échéance ne donneront pas lieu à escompte.</cbc:Note>
+     <cbc:Note>#BAR#B2B-FR</cbc:Note>
      <cbc:DocumentCurrencyCode>EUR </cbc:DocumentCurrencyCode>
      <cbc:AccountingCost>Rplt vannes avec purges canalisées - SPI</cbc:AccountingCost>
      <cbc:BuyerReference>               </cbc:BuyerReference>
@@ -67,7 +68,6 @@
                <cbc:EndpointID schemeID="0009">31490119000087 </cbc:EndpointID>
                <cac:PartyIdentification>
                     <cbc:ID schemeID="0009">31490119000087 </cbc:ID>
-                    <!-- BT-46-0 (Identifiant de l'acheteur (GlobalID)) : 3654789851 -->
                </cac:PartyIdentification>
                <cac:PostalAddress>
                     <cbc:StreetName>12 rue d'Oradour sur Glane            </cbc:StreetName>
@@ -114,7 +114,6 @@
      </cac:Delivery>
      <cac:PaymentMeans>
           <cbc:PaymentMeansCode name="Virement">30</cbc:PaymentMeansCode>
-          <cbc:PaymentDueDate>2025-08-02</cbc:PaymentDueDate>
           <cbc:PaymentID>26140022_C0000010_FR18314901190 </cbc:PaymentID>
           <cac:PayeeFinancialAccount>
                <cbc:ID>FR76 3000 3038 2900 0201 2964 696</cbc:ID>

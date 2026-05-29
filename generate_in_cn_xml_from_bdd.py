@@ -3,14 +3,20 @@ import base64
 import pyodbc
 import copy
 
+import os
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+from pyodbc import Row
+
 SERVER_NAME   = "FR-SD-SQLDIV"
 DATABASE_NAME = "eInvoice"
+ETL           = "v_inv_cn_header_python"
 
-INPUT_PATH      = "_input/"
-DOC_INPUT_PATH  = INPUT_PATH + "cleaned/"
-ATTACHMENT_INPUT_PATH   = INPUT_PATH + "pj_test/"
+INPUT_PATH            = os.path.join(BASE_DIR, "_input/")
+DOC_INPUT_PATH        = os.path.join(INPUT_PATH, "cleaned/")
+ATTACHMENT_INPUT_PATH = os.path.join(INPUT_PATH, "pj_test/")
 
-DOC_OUTPUT_PATH = "_output/"
+DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
 
 INVOICE_TEMPLATE_INPUT     = DOC_INPUT_PATH + "UC5_INV_EN16931_CLEAN.xml"
 CREDIT_NOTE_TEMPLATE_INPUT = DOC_INPUT_PATH + "UC5b_CN_EN16931_CLEAN.xml"
@@ -19,6 +25,182 @@ ATTACHMENT_INPUT = "_attachment/"
 
 # TODO : Case Chorus (B2G ? besoin champ additionnels ?)
 
+## Back Pour visu table en front
+def fetch_all_header_columns() -> list[str]:
+    """
+    Récupère les noms de colonnes d'entêtes des facture en base {SERVER_NAME} du serveur {DATABASE_NAME}
+
+    :param None:
+        Select de rien sur la table, ne prends que les metaDonnées (les noms de colonnes
+    :return list[str]:
+        Liste des noms de colonnes
+    """
+
+    connH = pyodbc.connect(
+        "DRIVER={SQL Server};"
+        f"SERVER={SERVER_NAME};"
+        f"DATABASE={DATABASE_NAME};"
+        "Trusted_Connection=yes;"
+    )
+
+    cursorH = connH.cursor()
+
+    cursorH.execute(f"""
+        SELECT
+              [Control_DocNum]
+            , [Control_CodeCient]
+            , [Control_NomClient]
+            , [Control_CodeTVA]
+            --, [Control_Siret]
+            , [BT115_FA_LegalMonetaryTotal_PayableAmount]
+        FROM [eInvoice].[dbo].[{ETL}]
+        WHERE 1 = 0
+    """)
+
+    colonnes = [column[0] for column in cursorH.description]
+
+    connH.close()
+
+    return colonnes
+
+def fetch_all_header() -> list[pyodbc.Row]:
+    """
+    Récupère toute les ligne d'entêtes des facture en base {SERVER_NAME} du serveur {DATABASE_NAME}
+
+    :param None:
+        Maxi select de la base -> visu tableau de l'app
+    :return rowH:
+        objet pyodbc.Row : colonnes de la ligne d'entête
+    """
+
+    connH = pyodbc.connect(
+        "DRIVER={SQL Server};"
+        f"SERVER={SERVER_NAME};"
+        f"DATABASE={DATABASE_NAME};"
+        "Trusted_Connection=yes;"
+    )
+
+    cursorH = connH.cursor()
+    cursorH.execute(f"""
+                    SELECT
+                        [Control_TypeDoc]
+                            , [Control_DocNum]
+                            , [Control_CodeCient]
+                            , [Control_NomClient]
+                            , [Control_CodeTVA]
+                            , [Control_Siret]
+                            , [Control_Process_B2B_B2C_B2G_eRephorsFR]
+                            , [Control_TVA_Piece]
+                            , [Control_TVA_Taux]
+                            , [Control_StatTiersFamille]
+                            , [Control_StatTiersWiloRepp]
+                            , [Control_DestFacture]
+                            , [Control_DestFacture_Email]
+                            , [UBL_FA_XML_Encode]
+                            , [UBL_FA_SpecSchema]
+                            , [BT0_FA_UBLVersionID]
+                            , [BT24_FA_CustomizationID]
+                            , [BT23_FA_ProfileID]
+                            , [BT1_FA_ID]
+                            , [BT2_FA_IssueDate]
+                            , [BT9_F_DueDate]
+                            , [BT3_FA_InvoiceCreditNoteTypeCode]
+                            , [BT22_FA_Note_REG]
+                            , [BT22_FA_Note_ABL]
+                            , [BT22_FA_Note_AAI]
+                            , [BT22_FA_Note_PMD]
+                            , [BT22_FA_Note_PMT]
+                            , [BT22_FA_Note_AAB]
+                            , [BT22_FA_Note_BAR]
+                            , [BT5_FA_DocumentCurrencyCode]
+                            , [BT19_FA_AccountingCost]
+                            , [BT10_FA_BuyerReference]
+                            , [BT73_FA_InvoicePeriod_StartDate]
+                            , [BT74_FA_InvoicePeriod_EndDate]
+                            , [BT8_FA_InvoicePeriod_DescriptionCode]
+                            , [BT13_FA_OrderReference_ID]
+                            , [BT14_FA_OrderReference_SalesOrderID]
+                            , [BT25_A_BillingReference_InvoiceDocumentReference_ID]
+                            , [BT26_A_BillingReference_InvoiceDocumentReference_IssueDate]
+                            , [BT34_FA_AccountingSupplierParty_Party_EndpointID_SchemeID]
+                            , [BT34_FA_AccountingSupplierParty_Party_EndpointID]
+                            , [BT28_FA_AccountingSupplierParty_Party_PartyName_Name]
+                            , [BT35_FA_AccountingSupplierParty_Party_PostalAddress_StreetName]
+                            , [BT36_FA_AccountingSupplierParty_Party_PostalAddress_AdditionalStreetName]
+                            , [BT37_FA_AccountingSupplierParty_Party_PostalAddress_CityName]
+                            , [BT38_FA_AccountingSupplierParty_Party_PostalAddress_PostalZone]
+                            , [BT40_FA_AccountingSupplierParty_Party_PostalAddress_Country_IdentificationCode]
+                            , [BT31_FA_AccountingSupplierParty_Party_PartyTaxScheme_CompanyID]
+                            , [BT31_FA_AccountingSupplierParty_Party_PartyTaxScheme_TaxScheme_ID]
+                            , [BT27_FA_AccountingSupplierParty_Party_PartyLegalEntity_RegistrationName]
+                            , [BT30_FA_AccountingSupplierParty_Party_PartyLegalEntity_CompanyID_Scheme]
+                            , [BT30_FA_AccountingSupplierParty_Party_PartyLegalEntity_CompanyID]
+                            , [BT33_FA_AccountingSupplierParty_Party_PartyLegalEntity_CompanyLegalForm]
+                            , [BT41_FA_AccountingSupplierParty_Party_Contact_Name]
+                            , [BT42_FA_AccountingSupplierParty_Party_Contact_Telephone]
+                            , [BT43_FA_AccountingSupplierParty_Party_Contact_ElectronicMail]
+                            , [BT49_FA_AccountingCustomerParty_Party_EndpointID_Scheme]
+                            , [BT49_FA_AccountingCustomerParty_Party_EndpointID]
+                            , [BT46_FA_AccountingCustomerParty_Party_PartyIdentification_ID_Scheme]
+                            , [BT46_FA_AccountingCustomerParty_Party_PartyIdentification_ID]
+                            , [BT50_FA_AccountingCustomerParty_Party_PostalAddress_StreetName]
+                            , [BT51_FA_AccountingCustomerParty_Party_PostalAddress_AdditionalStreetName]
+                            , [BT52_FA_AccountingCustomerParty_Party_PostalAddress_CityName]
+                            , [BT53_FA_AccountingCustomerParty_Party_PostalAddress_PostalZone]
+                            , [BT55_FA_AccountingCustomerParty_Party_PostalAddress_Country_IdentificationCode]
+                            , [BT48_FA_AccountingCustomerParty_Party_PartyTaxScheme_CompanyID]
+                            , [BT48_FA_AccountingCustomerParty_Party_PartyTaxScheme_TaxScheme_ID]
+                            , [BT44_FA_AccountingCustomerParty_Party_PartyLegalEntity_RegistrationName]
+                            , [BT57_FA_AccountingCustomerParty_Party_Contact_Telephone]
+                            , [BT58_FA_AccountingCustomerParty_Party_ElectronicMail]
+                            , [BT75_FA_Delivery_DeliveryLocation_Address_StreetName]
+                            , [BT76_FA_Delivery_DeliveryLocation_Address_AdditionalStreetName]
+                            , [BT77_FA_Delivery_DeliveryLocation_Address_CityName]
+                            , [BT78_FA_Delivery_DeliveryLocation_Address_PostalZone]
+                            , [BT80_Delivery_FA_DeliveryLocation_Address_Country_IdentificationCode]
+                            , [BT70_FA_Delivery_DeliveryParty_PartyName_Name]
+                            , [BT81_FA_PaymentMeans_PaymentMeansCode_Name]
+                            , [BT81_FA_PaymentMeans_PaymentMeansCode]
+                            , [BT83_FA_PaymentMeans_PaymentID]
+                            , [BT84_FA_PaymentMeans_PayeeFinancialAccount_ID]
+                            , [BT85_FA_PaymentMeans_PayeeFinancialAccount_Name]
+                            , [BT86_FA_PaymentMeans_PayeeFinancialAccount_FinancialInstitutionBranch_ID]
+                            , [BT20_FA_PaymentTerms_Note]
+                            , [BT110_FA_TaxTotal_TaxAmount_currencyID]
+                            , [BT110_FA_TaxTotal_TaxAmount]
+                            , [BT116_FA_TaxTotal_TaxSubtotal_TaxableAmount_currencyID]
+                            , [BT116_FA_TaxTotal_TaxSubtotal_TaxableAmount]
+                            , [BT117_FA_TaxTotal_TaxSubtotal_TaxAmount_currencyID]
+                            , [BT117_FA_TaxTotal_TaxSubtotal_TaxAmount]
+                            , [BT118_FA_TaxTotal_TaxSubtotal_TaxCategory_ID]
+                            , [BT119_FA_TaxTotal_TaxSubtotal_TaxCategory_Percent]
+                            , [BT119_FA_TaxTotal_TaxSubtotal_TaxCategory_TaxScheme_ID]
+                            , [BT106_FA_LegalMonetaryTotal_LineExtensionAmount_currencyID]
+                            , [BT106_FA_LegalMonetaryTotal_LineExtensionAmount]
+                            , [BT109_FA_LegalMonetaryTotal_TaxExclusiveAmount_currencyID]
+                            , [BT109_FA_LegalMonetaryTotal_TaxExclusiveAmount]
+                            , [BT112_FA_LegalMonetaryTotal_TaxInclusiveAmount_currencyID]
+                            , [BT112_FA_LegalMonetaryTotal_TaxInclusiveAmount]
+                            , [BT115_FA_LegalMonetaryTotal_PayableAmount_currencyID]
+                            , [BT115_FA_LegalMonetaryTotal_PayableAmount]
+                    FROM [eInvoice].[dbo].[{ETL}]
+                    """)
+
+    #rowAH = cursorH.fetchall()
+    rowAH = []
+    while True:
+        try:
+            row = cursorH.fetchone()
+            if row is None:
+                break
+            rowAH.append(row)
+        except Exception as e:
+            print(f"Ligne ignorée : {e}")
+    connH.close()
+
+    return rowAH
+
+## Back Pour gen factu
 def fetch_header(num_fact : int) -> pyodbc.Row:
     """
     Récupère la ligne d'entête de facture en base {SERVER_NAME} du serveur {DATABASE_NAME},
@@ -38,7 +220,7 @@ def fetch_header(num_fact : int) -> pyodbc.Row:
     )
 
     cursorH = connH.cursor()
-    cursorH.execute("""
+    cursorH.execute(f"""
                     SELECT
                            [Control_TypeDoc]
                           ,[Control_DocNum]
@@ -142,8 +324,8 @@ def fetch_header(num_fact : int) -> pyodbc.Row:
                           ,[BT115_FA_LegalMonetaryTotal_PayableAmount]
                       FROM [eInvoice].[dbo].[v_inv_cn_header_python]
     
-                      WHERE [Control_DocNum] = ?
-                      """, (num_fact,))
+                      WHERE [Control_DocNum] = {num_fact}
+                      """)
 
     rowH = cursorH.fetchone()
     connH.close()
@@ -169,7 +351,7 @@ def fetch_lines(num_fact : int) -> list[pyodbc.Row]:
     )
 
     cursorL = connL.cursor()
-    cursorL.execute("""
+    cursorL.execute(f"""
                     SELECT
                         [Control_TypeDoc]
                             , [Control_DocNum]
@@ -199,8 +381,8 @@ def fetch_lines(num_fact : int) -> list[pyodbc.Row]:
                             , [BT149_InvoiceLine_CreditNoteLine_Price_BaseQuantity]
                     FROM [eInvoice].[dbo].[v_inv_cn_lines_python]
 
-                    WHERE [Control_DocNum] = ?
-                    """, (num_fact,))
+                    WHERE [Control_DocNum] = {num_fact}
+                    """)
 
     rowsL = cursorL.fetchall()
     connL.close()
@@ -223,18 +405,21 @@ def add_attachment(output_doc : etree._Element, rowH : pyodbc.Row, NS : dict[str
 
     #f"{DOC_OUTPUT_PATH}{rowH.Control_TypeDoc}_{rowH.Control_DocNum}_{rowH.Control_CodeCient}_{rowH.BT2_FA_IssueDate}.xml"
 
+    # TODO : Voir comment le file est recuperer pour ensuite le passer en parametre | in_file_name
     file = ATTACHMENT_INPUT_PATH + "F202500001_INV_20250201_FX_Commentee_EN16931.pdf"
+
     attachment_name = f"{rowH.Control_TypeDoc}_{rowH.Control_DocNum}_{rowH.Control_CodeCient}_{rowH.BT2_FA_IssueDate}_attachment.pdf"
     with open(file, "rb") as f:
         attachment_encoded = base64.b64encode(f.read()).decode("utf-8")
 
-    output_doc.find("cac:AdditionalDocumentReference/cbc:ID", namespaces=NS).test = ""
-    output_doc.find("cac:AdditionalDocumentReference/cbc:DocumentTypeCode", namespaces=NS).text = ""
+    output_doc.find("cac:AdditionalDocumentReference/cbc:ID", namespaces=NS).text = "ATTACHMENT_001"
+    output_doc.find("cac:AdditionalDocumentReference/cbc:DocumentTypeCode", namespaces=NS).text = "916"
 
     output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("mimeCode", "application/pdf")
     output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("filename", attachment_name)
     output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).text = attachment_encoded
 
+# L'authentique coeur de la machine
 def fact_bdd_to_xml(num_fact : int) -> None: # -> XML_UBL2
     """
     Génère un fichier xml en respectant les normes ULB2, en suivant les champs
@@ -534,12 +719,25 @@ def gen_all_doc_in_table():
     for num in cleanListNum:
         fact_bdd_to_xml(num)
 
+def gen_all_doc_in_list(list_id_doc: list):
+    for count, id in enumerate(list_id_doc, 1):
+        fact_bdd_to_xml(id)
+        yield f"{count}/{len(list_id_doc)}"
+
 if __name__ == "__main__":
     #gen_all_doc_in_table()
 
     '''
-    Exemple d'utilisation individuel (/!\\ tape dans la table v_inv_cn_header_python)
+    Exemple d'utilisation individuel (/!\\ tape dans la table {ETL})
     fact_bdd_to_xml(26140022) # CN
     fact_bdd_to_xml(25144441) # INV
-    '''
+    
+    rows = fetch_all_header()
+    cols = fetch_all_header_columns()
 
+    for r in rows :
+        print(r)
+
+    for c in cols :
+        print(c)
+    '''

@@ -33,8 +33,8 @@
           <cbc:SalesOrderID>[PLACEHOLDER]</cbc:SalesOrderID>
      </cac:OrderReference>
      <cac:AdditionalDocumentReference>
-         <cbc:ID>[PLACEHOLDER]</cbc:ID>
-         <cbc:DocumentTypeCode>[PLACEHOLDER]</cbc:DocumentTypeCode>
+         <cbc:ID>[PLACEHOLDER]</cbc:ID> <!-- BT-122 -->
+         <cbc:DocumentTypeCode>[PLACEHOLDER]</cbc:DocumentTypeCode> <!-- 916 = pièce jointe justificative -->
          <cac:Attachment>
             <cbc:EmbeddedDocumentBinaryObject mimeCode="[PLACEHOLDER]" filename="[PLACEHOLDER]">
                 [PLACEHOLDER]
