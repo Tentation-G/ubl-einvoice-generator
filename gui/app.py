@@ -13,30 +13,49 @@ app = tk.Tk()
 app.geometry("1200x600")
 
 # Recup bdd
-rows = fetch_all_header()
-cols = fetch_all_header_columns()
+rows = []
+cols = ["", "Doc"]
+def update_data():
+    global rows, cols
+    rows = fetch_all_header()
+    cols = fetch_all_header_columns()
+
+    # Refresh colonnes
+    all_cols = ("✓", *cols)
+    tree.config(columns=all_cols)
+    tree.heading("✓", text="✓")
+    tree.column("✓", width=40, anchor="center")
+    for col in cols:
+        tree.heading(col, text=col)
+        tree.column(col)
+
+    tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
+    log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Data up to date>")
 
 ## == Filtre ==
 # Recherche Inv/Cn
 search_var = tk.StringVar()
 frame_search = tk.Frame(app)
 frame_search.pack(fill="x", padx=2, pady=(10, 0))
-tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
+#tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
 tk.Entry(frame_search, textvariable=search_var, width=30).pack(side="left", padx=8)
+
+# Bouton refresh Data
+tk.Button(frame_search, text="Rafraichir", command=update_data).pack(side="right", padx=10)
 
 # Bouton Validation -> gen ubl
 def valider():
     if not list_id:
         messagebox.showwarning("Attention", "Aucune ligne sélectionnée.")
-        log(f"> [WARNING]     [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : Aucune ligne selectionnée")
+        log(f"> [WARNING]     [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : Aucune ligne selectionnée", "red")
         return
     ok = messagebox.askyesno("Confirmation", f"Valider {len(list_id)} ligne(s) ?\n\n{list_id}")
     if ok:
         log(f"> [VALIDATION]  [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Génération des ULB> -> {list_id}")
         for progress in gen_all_doc_in_list(list_id):
-            log(f"> [GENERATION]  [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {progress}")
+            log(f"> [GENERATION]  [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {progress}", "blue")
             app.update()
-        log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <DONE>")
+        log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <DONE>", "green")
 
 
 tk.Button(frame_search, text="Valider", command=valider).pack(side="right", padx=10)
@@ -76,9 +95,13 @@ pane.add(log_box, stretch="always")
 app.update()
 pane.sash_place(0, 0, int(app.winfo_height() * 0.7))
 
-def log(msg):
+log_box.tag_configure("red", foreground="red")
+log_box.tag_configure("blue", foreground="blue")
+log_box.tag_configure("green", foreground="green")
+
+def log(msg, color=None):
     log_box.config(state="normal")
-    log_box.insert("end", msg + "\n")
+    log_box.insert("end", msg + "\n", color)
     log_box.see("end")
     log_box.config(state="disabled")
 
@@ -99,18 +122,14 @@ def tab_fill():
         #tag = "gris" if index % 2 == 0 else ""
         #tree.insert("", "end", values=[coche, *clean], tags=(tag,))
 
-list_id = []
-def on_click(event):
-    """Bascule la checkbox quand on clique sur une ligne."""
-    iid = tree.identify_row(event.y)
-    if not iid:
-        return
+def set_check(iid, state):
+    """Coche/décoche une ligne et synchronise checks + list_id."""
     vals = tree.item(iid, "values")
     row_data = tuple(vals[1:])  # tout sauf la colonne ✓
-    checks[row_data] = not checks.get(row_data, False)
-    tree.set(iid, "✓", "☑" if checks[row_data] else "☐")
+    checks[row_data] = state
+    tree.set(iid, "✓", "☑" if state else "☐")
 
-    if checks[row_data]:
+    if state:
         if vals[2] not in list_id:
             list_id.append(vals[2])
             log(f"> [INFO][APPEND][{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {list_id}")
@@ -123,6 +142,15 @@ def on_click(event):
                 log(f"> [INFO][REMOVE][{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Liste vide>")
 
 
+list_id = []
+def on_click(event):
+    """Bascule la checkbox quand on clique sur une ligne."""
+    iid = tree.identify_row(event.y)
+    if not iid:
+        return
+    vals = tree.item(iid, "values")
+    row_data = tuple(vals[1:])  # tout sauf la colonne ✓
+    set_check(iid, not checks.get(row_data, False))  # toggle
 
 tree.bind("<ButtonRelease-1>", on_click)
 
@@ -136,5 +164,9 @@ def on_search(*_):
 search_var.trace_add("write", on_search)
 
 # Start
-tab_fill()
-app.mainloop()
+
+if __name__ == "__main__":
+    update_data()
+
+    tab_fill()
+    app.mainloop()
