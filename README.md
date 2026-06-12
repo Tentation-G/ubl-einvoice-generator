@@ -2,17 +2,6 @@
 
 Générateur de factures et avoirs au format **UBL 2.1 / EN 16931**, à partir de données stockées en base SQL Server.
 
-Ce script Python interroge la base `eInvoice`, récupère les entêtes et lignes de documents, puis injecte les valeurs dans des templates XML conformes aux normes européennes de facturation électronique.
-
----
-
-## Fonctionnalités
-
-- **Factures (Invoice)** et **Avoirs (CreditNote)** — génération à partir d'un même pipeline, avec sélection automatique du template adapté.
-- **Processus B2B / B2C** supportés (B2G en réflexion).
-- **Pièces jointes** encodées en base64 directement embarquées dans le XML (`EmbeddedDocumentBinaryObject`).
-- **Génération unitaire** (par numéro de document) ou **en masse** (tous les documents présents en table).
-
 ---
 
 ## Arborescence du projet
@@ -23,74 +12,101 @@ xml_inv_cn_gen/
 ├── _input/
 │   ├── backups/
 │   ├── base/                    # Templates XML commentés de référence
-│   │   ├── UC5_F..._INV_...xml
-│   │   └── UC5b_F..._CN_...xml
 │   ├── cleaned/                 # Templates XML nettoyés (utilisés en production)
 │   │   ├── UC5_INV_EN16931_CLEAN.xml
 │   │   └── UC5b_CN_EN16931_CLEAN.xml
 │   └── pj_test/                 # Pièces jointes de test
 │
-├── _output/                     # Fichiers XML générés
-│   ├── CreditNote_26140022_C0000010_2026-01-20.xml
-│   ├── Invoice_25144441_C0000010_2025-11-27.xml
-│   └── ...
+├── _output/                     # Fichiers XML générés (pour test)
 │
 ├── Archive/                     # Anciennes versions / archives
-├── generate_in_cn_xml_from_bdd.py   # Script principal
+│
+├── gui/
+│   └── app.py                   # Interface graphique Tkinter
+│
+├── generate_in_cn_xml_from_bdd.py   # Script principal (logique métier)
+├── app_launcher.bat                 # Lanceur portable (double-clic)
 ├── requirements.txt
-├── .gitignore
-└── .venv/
+└── .gitignore
 ```
+
+> Le dossier `python3-13_portable/` n'est **pas** versionné (voir `.gitignore`).
+> Il doit être reconstitué localement — voir section **Déploiement portable** ci-dessous.
 
 ---
 
-## Prérequis
+## Prérequis système
 
-- **Python 3.10+**
-- **SQL Server** accessible avec authentification Windows (`Trusted_Connection`)
-- Base de données `eInvoice` avec les vues :
-  - `v_inv_cn_header_python` - données d'entête
-  - `v_inv_cn_lines_python` - lignes de document
-
-### Dépendances Python
-
-```
-lxml
-pyodbc
-base64
-copy
-```
-
-Installation :
-
-```bash
-pip install -r requirements.txt
-```
-
-> Le driver ODBC *SQL Server* doit être installé sur la machine. (apparement)
+- **Windows 10/11** 64 bits
+- **Microsoft ODBC Driver for SQL Server** installé sur la machine (composant système, indépendant de Python) ( ¯\_(ツ)_/¯ )
+- Accès réseau à la base **SQL Server** `eInvoice` avec authentification Windows (`Trusted_Connection`)
+- Vues SQL requises :
+  - `v_inv_cn_header_python` — données d'entête de inv/cn
+  - `v_inv_cn_lines_python`  — lignes de inv/cn
 
 ---
 
-## Utilisation
+## Lancement (mode portable)
 
-### Génération d'un document unique
+Si le dossier `python3-13_portable/` est présent (voir section **Déploiement** ci-dessous), il suffit de double-cliquer sur :
 
-```python
-from generate_in_cn_xml_from_bdd import fact_bdd_to_xml
-
-fact_bdd_to_xml(25144441)  # Facture
-fact_bdd_to_xml(26140022)  # Avoir
+```
+app_launcher.bat
 ```
 
-### Génération de tous les documents en table
+L'interface graphique s'ouvre directement, sans installation Python sur la machine.
 
-```python
-from generate_in_cn_xml_from_bdd import gen_all_doc_in_table
+---
 
-gen_all_doc_in_table()
+## Déploiement portable
+
+Le projet embarque son propre interpréteur Python pour fonctionner sans installation. Le dossier `python3-13_portable/` n'est pas dans le repo : il faut le reconstituer une fois après clonage.
+
+### Étapes
+
+**1. Télécharger WinPython**
+
+Sur [winpython.github.io](https://winpython.github.io/), télécharger **WinPython64-3.13.x.xdot** (version `dot`, la plus légère).  
+Dézipper l'archive.
+
+**2. Copier l'interpréteur dans le projet**
+
+Dans le dossier extrait, copier le sous-dossier **`python`** (celui qui contient `python.exe`) à la racine du projet, et le renommer **`python3-13_portable`**.
+
+```
+xml_inv_cn_gen/
+└── python3-13_portable/
+    ├── python.exe
+    ├── pythonw.exe
+    ├── Lib/
+    └── ...
 ```
 
-Les fichiers XML sont écrits dans `_output/` avec la convention de nommage :
+**3. Installer les dépendances**
+
+Ouvrir un `cmd` à la racine du projet et lancer :
+
+```
+python3-13_portable\python.exe -m pip install -r requirements.txt
+```
+
+> Si PyPI est inaccessible (pare-feu), les wheels offline sont disponibles dans `packages/` :
+> ```
+> python3-13_portable\python.exe -m pip install --no-index --find-links=packages -r requirements.txt
+> ```
+
+**4. Tester**
+
+```
+python3-13_portable\python.exe gui\app.py
+```
+
+Si la fenêtre s'ouvre et que la connexion SQL fonctionne, le déploiement est terminé.  
+Pour l'usage quotidien, utiliser `app_launcher.bat` (double-clic).
+
+---
+
+Les fichiers XML sont écrits dans `DOC_OUTPUT_PATH` avec la convention de nommage :
 
 ```
 {TypeDoc}_{DocNum}_{CodeClient}_{IssueDate}.xml
@@ -100,7 +116,7 @@ Les fichiers XML sont écrits dans `_output/` avec la convention de nommage :
 
 ## Configuration
 
-Les paramètres de connexion et les chemins sont définis en constantes en haut du script :
+Les paramètres de connexion et les chemins sont définis en constantes en haut de `generate_in_cn_xml_from_bdd.py` :
 
 | Variable | Description |
 |---|---|
@@ -120,5 +136,3 @@ Les documents générés suivent le profil **EN 16931** (norme européenne de fa
 - `cbc` — `urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2`
 
 Les champs sont préfixés selon la nomenclature **BT** (Business Term) du standard EN 16931.
-
----
