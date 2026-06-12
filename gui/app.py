@@ -1,181 +1,292 @@
+"""GUI de validation / génération UBL.
+
+- Multi-filtres dynamiques (colonne + texte, combinés en ET)
+- Cocher / décocher toutes les lignes filtrées en un clic
+- Sélection indexée par ID métier (robuste au refresh)
+- Génération dans un thread (UI jamais figée, pas de double-clic possible)
+- Log rétro conservé : > [LEVEL] [timestamp] : message
+"""
+
+import os
+import sys
+import queue
+import threading
 import tkinter as tk
-from tkinter import ttk
-from tkinter import messagebox
+from tkinter import ttk, messagebox
 from tkinter.scrolledtext import ScrolledText
+from datetime import datetime
 
-from datetime import datetime as dt
-now = dt.now().strftime('%Y-%m-%d %H:%M:%S')
-
-import sys, os
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
 
-from generate_in_cn_xml_from_bdd import *
+from generate_in_cn_xml_from_bdd import (
+    fetch_all_header,
+    fetch_all_header_columns,
+    gen_all_doc_in_list,
+)
 
-#os.makedirs(output_path("_output"), exist_ok=True)
-
-# App param
-app = tk.Tk()
-app.title("Computah, make thoses things digitals")
-app.geometry("1200x600")
-
-# Recup bdd
-rows = []
-cols = ["", "Doc"]
-# TODO : il rafraichie rien celui la
-def update_data():
-    global rows, cols
-    rows = fetch_all_header()
-    cols = fetch_all_header_columns()
-
-    # Refresh colonnes
-    all_cols = ("✓", *cols)
-    tree.config(columns=all_cols)
-    tree.heading("✓", text="✓")
-    tree.column("✓", width=40, anchor="center")
-    for col in cols:
-        tree.heading(col, text=col)
-        tree.column(col)
-
-    tab_fill()
-    log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Data up to date>")
-
-## == Filtre ==
-# Recherche Inv/Cn
-search_var = tk.StringVar()
-frame_search = tk.Frame(app)
-frame_search.pack(fill="x", padx=2, pady=(10, 0))
-tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
-tk.Entry(frame_search, textvariable=search_var, width=30).pack(side="left", padx=8)
-
-# Bouton refresh Data
-tk.Button(frame_search, text="Rafraichir", command=update_data).pack(side="right", padx=10)
-
-# Bouton Validation -> gen ubl
-def valider():
-    if not list_id:
-        messagebox.showwarning("Attention", "Aucune ligne sélectionnée.")
-        log(f"> [WARNING]     [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : Aucune ligne selectionnée", "red")
-        return
-    ok = messagebox.askyesno("Confirmation", f"Valider {len(list_id)} ligne(s) ?\n\n{list_id}")
-    if ok:
-        log(f"> [VALIDATION]  [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Génération des ULB> -> {list_id}")
-        for progress in gen_all_doc_in_list(list_id):
-            log(f"> [GENERATION]  [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {progress}", "blue")
-            app.update()
-        log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <DONE>", "green")
+ID_COL = 1                  # index de la colonne servant d'ID métier (ex: Control_DocNum)
+ALL_COLS = "« Toutes »"     # option de filtre "toutes colonnes"
+DEBOUNCE_MS = 300
 
 
-tk.Button(frame_search, text="Valider", command=valider).pack(side="right", padx=10)
-
-## == Tableaux ==
-# Wrapper pour tableau + scrollbar
-pane = tk.PanedWindow(app, orient="vertical", sashwidth=5)
-pane.pack(fill="both", expand=True, padx=2, pady=2)
-
-wrapper_tab = tk.Frame(pane)
-pane.add(wrapper_tab, stretch="always")
-
-# Construction du tableau avec colonne checkbox en plus
-all_cols = ("✓", *cols)
-tree = ttk.Treeview(wrapper_tab, columns=all_cols, show="headings")
-tree.tag_configure("gris", background="#f0f0f0")
-tree.heading("✓", text="✓")
-tree.column("✓", width=40, anchor="center")
-for col in cols:
-    tree.heading(col, text=col)
-
-# Scrollbar horizontal
-scroll_x = ttk.Scrollbar(wrapper_tab, orient="horizontal", command=tree.xview)
-tree.configure(xscrollcommand=scroll_x.set)
-
-scroll_x.pack(fill="x", side="bottom")
-tree.pack(fill="both", expand=True)
-
-# Etat des checkboxes
-checks = {}
-
-## == Log lives matter ==
-# Zone de log
-log_box = ScrolledText(pane, height=0, state="disabled", font=("Courier", 10))
-pane.add(log_box, stretch="always")
-
-app.update()
-pane.sash_place(0, 0, int(app.winfo_height() * 0.7))
-
-log_box.tag_configure("red", foreground="red")
-log_box.tag_configure("blue", foreground="blue")
-log_box.tag_configure("green", foreground="green")
-
-def log(msg, color=None):
-    log_box.config(state="normal")
-    log_box.insert("end", msg + "\n", color)
-    log_box.see("end")
-    log_box.config(state="disabled")
-
-def tab_fill():
-    """Vide et re-remplit le tableau selon le filtre de recherche"""
-    filtre = search_var.get()
-    tree.delete(*tree.get_children())
-    for row in rows:
-        # filtre sur cols[1] -> [Control_DocNum]
-        if filtre and filtre not in str(row[1]).lower():
-            continue
-        clean = [str(v).replace('"', '').replace('{', '').replace('}', '').replace('\r\n', ' ').replace('\n', ' ') for v in row]
-        coche = "☑" if checks.get(tuple(clean)) else "☐"
-
-        tree.insert("", "end", values=[coche, *clean])
-
-        #index = len(tree.get_children())
-        #tag = "gris" if index % 2 == 0 else ""
-        #tree.insert("", "end", values=[coche, *clean], tags=(tag,))
-
-def set_check(iid, state):
-    """Coche/décoche une ligne et synchronise checks + list_id."""
-    vals = tree.item(iid, "values")
-    row_data = tuple(vals[1:])  # tout sauf la colonne ✓
-    checks[row_data] = state
-    tree.set(iid, "✓", "☑" if state else "☐")
-
-    if state:
-        if vals[2] not in list_id:
-            list_id.append(vals[2])
-            log(f"> [INFO][APPEND][{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {list_id}")
-    else:
-        if vals[2] in list_id:
-            list_id.remove(vals[2])
-            if list_id :
-                log(f"> [INFO][REMOVE][{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : {list_id}")
-            if not list_id :
-                log(f"> [INFO][REMOVE][{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Liste vide>")
+def clean(value):
+    """Nettoie une valeur pour l'affichage dans le Treeview."""
+    return (str(value)
+            .replace('"', '').replace('{', '').replace('}', '')
+            .replace('\r\n', ' ').replace('\n', ' ').strip())
 
 
-list_id = []
-def on_click(event):
-    """Bascule la checkbox quand on clique sur une ligne."""
-    iid = tree.identify_row(event.y)
-    if not iid:
-        return
-    vals = tree.item(iid, "values")
-    row_data = tuple(vals[1:])  # tout sauf la colonne ✓
-    set_check(iid, not checks.get(row_data, False))  # toggle
+class App:
+    def __init__(self):
+        self.app = tk.Tk()
+        self.app.title("Computah, make thoses things digitals")
+        self.app.geometry("1200x600")
 
-tree.bind("<ButtonRelease-1>", on_click)
+        self.rows = []          # données brutes de la bdd
+        self.cols = []          # noms des colonnes
+        self.selected = set()   # IDs cochés (colonne ID_COL)
+        self.filters = []       # [{frame, col_var, txt_var}, ...]
+        self._timer = None      # debounce des filtres
+        self._queue = queue.Queue()  # logs venant du thread de génération
 
-search_timer = None
-def on_search(*_):
-    global search_timer
-    if search_timer:
-        app.after_cancel(search_timer)
-    search_timer = app.after(300, tab_fill)
+        self._build_ui()
 
-search_var.trace_add("write", on_search)
+    # ------------------------------------------------------------ UI
+    def _build_ui(self):
+        # --- Barre du haut : filtres + actions
+        top = tk.Frame(self.app)
+        top.pack(fill="x", padx=4, pady=(8, 0))
 
-# Start
+        self.filters_frame = tk.Frame(top)
+        self.filters_frame.pack(side="left", fill="x", expand=True)
+
+        actions = tk.Frame(top)
+        actions.pack(side="right")
+        self.btn_valider = tk.Button(actions, text="Valider", command=self.valider)
+        self.btn_valider.pack(side="right", padx=4)
+        self.btn_refresh = tk.Button(actions, text="Rafraichir", command=self.update_data)
+        self.btn_refresh.pack(side="right", padx=4)
+        tk.Button(actions, text="Tout décocher", command=lambda: self.check_visible(False)).pack(side="right", padx=4)
+        tk.Button(actions, text="Cocher filtrés", command=lambda: self.check_visible(True)).pack(side="right", padx=4)
+        tk.Button(actions, text="+ Filtre", command=self.add_filter).pack(side="right", padx=12)
+
+        # --- Compteur
+        self.counter = tk.Label(self.app, anchor="w", fg="#555")
+        self.counter.pack(fill="x", padx=6)
+
+        # --- Tableau + log dans un PanedWindow
+        pane = tk.PanedWindow(self.app, orient="vertical", sashwidth=5)
+        pane.pack(fill="both", expand=True, padx=2, pady=2)
+
+        wrapper = tk.Frame(pane)
+        pane.add(wrapper, stretch="always")
+
+        self.tree = ttk.Treeview(wrapper, columns=("✓",), show="headings")
+        scroll_y = ttk.Scrollbar(wrapper, orient="vertical", command=self.tree.yview)
+        scroll_x = ttk.Scrollbar(wrapper, orient="horizontal", command=self.tree.xview)
+        self.tree.configure(yscrollcommand=scroll_y.set, xscrollcommand=scroll_x.set)
+        scroll_x.pack(fill="x", side="bottom")
+        scroll_y.pack(fill="y", side="right")
+        self.tree.pack(fill="both", expand=True)
+        self.tree.bind("<ButtonRelease-1>", self.on_click)
+
+        # --- Log rétro
+        self.log_box = ScrolledText(pane, height=0, state="disabled", font=("Courier", 10))
+        pane.add(self.log_box, stretch="always")
+        for tag, color in (("red", "red"), ("blue", "blue"), ("green", "green")):
+            self.log_box.tag_configure(tag, foreground=color)
+
+        self.app.update()
+        pane.sash_place(0, 0, int(self.app.winfo_height() * 0.7))
+
+    def _rebuild_columns(self):
+        all_cols = ("✓", *self.cols)
+        self.tree.config(columns=all_cols)
+        self.tree.heading("✓", text="✓")
+        self.tree.column("✓", width=40, anchor="center", stretch=False)
+        for col in self.cols:
+            self.tree.heading(col, text=col)
+            self.tree.column(col, width=130)
+        # met à jour les combobox des filtres existants
+        for f in self.filters:
+            f["combo"]["values"] = (ALL_COLS, *self.cols)
+
+    # ------------------------------------------------------------ Log
+    def log(self, level, msg, color=None):
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # padding après le crochet, comme avant : "> [INFO]        [ts]" / "> [VALIDATION]  [ts]"
+        line = f"> [{level}]".ljust(16) + f"[{ts}] : {msg}\n"
+        self.log_box.config(state="normal")
+        self.log_box.insert("end", line, color)
+        self.log_box.see("end")
+        self.log_box.config(state="disabled")
+
+    # ------------------------------------------------------------ Data
+    def update_data(self):
+        try:
+            self.rows = fetch_all_header()
+            self.cols = list(fetch_all_header_columns())
+        except Exception as e:
+            self.log("ERROR", f"Lecture bdd impossible : {e}", "red")
+            return
+
+        self._rebuild_columns()
+
+        # purge la sélection des IDs disparus de la bdd
+        existing = {clean(r[ID_COL]) for r in self.rows}
+        gone = self.selected - existing
+        if gone:
+            self.selected &= existing
+            self.log("INFO", f"<{len(gone)} ID(s) cochés absents de la bdd, retirés> -> {sorted(gone)}")
+
+        self.tab_fill()
+        self.log("INFO", "<Data up to date>")
+
+    # ------------------------------------------------------------ Filtres
+    def add_filter(self):
+        frame = tk.Frame(self.filters_frame)
+        frame.pack(side="left", padx=3)
+
+        col_var = tk.StringVar(value=ALL_COLS)
+        txt_var = tk.StringVar()
+        combo = ttk.Combobox(frame, textvariable=col_var, state="readonly",
+                             width=18, values=(ALL_COLS, *self.cols))
+        combo.pack(side="left")
+        tk.Entry(frame, textvariable=txt_var, width=16).pack(side="left", padx=2)
+
+        flt = {"frame": frame, "col_var": col_var, "txt_var": txt_var, "combo": combo}
+        tk.Button(frame, text="✕", command=lambda: self.remove_filter(flt)).pack(side="left")
+        self.filters.append(flt)
+
+        col_var.trace_add("write", self._debounced_fill)
+        txt_var.trace_add("write", self._debounced_fill)
+
+    def remove_filter(self, flt):
+        flt["frame"].destroy()
+        self.filters.remove(flt)
+        self.tab_fill()
+
+    def _debounced_fill(self, *_):
+        if self._timer:
+            self.app.after_cancel(self._timer)
+        self._timer = self.app.after(DEBOUNCE_MS, self.tab_fill)
+
+    def _match(self, values):
+        """True si la ligne (valeurs nettoyées) passe tous les filtres (ET)."""
+        for f in self.filters:
+            needle = f["txt_var"].get().strip().lower()
+            if not needle:
+                continue
+            col = f["col_var"].get()
+            if col == ALL_COLS:
+                haystack = " ".join(values).lower()
+            else:
+                try:
+                    haystack = values[self.cols.index(col)].lower()
+                except ValueError:
+                    continue
+            if needle not in haystack:
+                return False
+        return True
+
+    # ------------------------------------------------------------ Tableau
+    def tab_fill(self):
+        self._timer = None
+        self.tree.delete(*self.tree.get_children())
+        shown = 0
+        for row in self.rows:
+            values = [clean(v) for v in row]
+            if not self._match(values):
+                continue
+            coche = "☑" if values[ID_COL] in self.selected else "☐"
+            self.tree.insert("", "end", values=[coche, *values])
+            shown += 1
+        self._update_counter(shown)
+
+    def _update_counter(self, shown=None):
+        if shown is None:
+            shown = len(self.tree.get_children())
+        self.counter.config(
+            text=f"{shown} / {len(self.rows)} ligne(s) affichée(s) — {len(self.selected)} cochée(s)"
+        )
+
+    def _row_id(self, iid):
+        return self.tree.item(iid, "values")[ID_COL + 1]  # +1 : colonne ✓ devant
+
+    def set_check(self, iid, state):
+        row_id = self._row_id(iid)
+        if state:
+            self.selected.add(row_id)
+        else:
+            self.selected.discard(row_id)
+        self.tree.set(iid, "✓", "☑" if state else "☐")
+        self._update_counter()
+
+    def on_click(self, event):
+        if self.tree.identify_region(event.x, event.y) != "cell":
+            return
+        iid = self.tree.identify_row(event.y)
+        if iid:
+            self.set_check(iid, self._row_id(iid) not in self.selected)
+
+    def check_visible(self, state):
+        """Coche/décoche toutes les lignes actuellement affichées (filtrées)."""
+        iids = self.tree.get_children()
+        for iid in iids:
+            self.set_check(iid, state)
+        action = "APPEND" if state else "REMOVE"
+        self.log(f"INFO][{action}", f"{len(iids)} ligne(s) -> {len(self.selected)} cochée(s) au total")
+
+    # ------------------------------------------------------------ Génération
+    def valider(self):
+        ids = sorted(self.selected)
+        if not ids:
+            messagebox.showwarning("Attention", "Aucune ligne sélectionnée.")
+            self.log("WARNING", "Aucune ligne sélectionnée", "red")
+            return
+
+        preview = ", ".join(ids[:10]) + (f" … (+{len(ids) - 10})" if len(ids) > 10 else "")
+        if not messagebox.askyesno("Confirmation", f"Valider {len(ids)} ligne(s) ?\n\n{preview}"):
+            return
+
+        self.log("VALIDATION", f"<Génération des UBL> -> {ids}")
+        self.btn_valider.config(state="disabled")
+        self.btn_refresh.config(state="disabled")
+        threading.Thread(target=self._worker, args=(ids,), daemon=True).start()
+        self.app.after(100, self._poll_queue)
+
+    def _worker(self, ids):
+        """Tourne dans un thread : ne touche jamais à l'UI, pousse dans la queue."""
+        try:
+            for progress in gen_all_doc_in_list(ids):
+                self._queue.put(("GENERATION", str(progress), "blue"))
+            self._queue.put(("INFO", "<DONE>", "green"))
+        except Exception as e:
+            self._queue.put(("ERROR", f"Génération interrompue : {e}", "red"))
+        finally:
+            self._queue.put(None)  # sentinelle de fin
+
+    def _poll_queue(self):
+        while True:
+            try:
+                item = self._queue.get_nowait()
+            except queue.Empty:
+                self.app.after(100, self._poll_queue)
+                return
+            if item is None:  # fin du thread
+                self.btn_valider.config(state="normal")
+                self.btn_refresh.config(state="normal")
+                return
+            self.log(*item)
+
+    # ------------------------------------------------------------ Run
+    def run(self):
+        self.add_filter()       # un filtre par défaut au lancement
+        self.update_data()
+        self.app.mainloop()
+
 
 if __name__ == "__main__":
-    update_data()
-
-    tab_fill()
-    app.mainloop()
+    App().run()
