@@ -41,7 +41,7 @@ def clean(value):
 class App:
     def __init__(self):
         self.app = tk.Tk()
-        self.app.title("Computah, make thoses things digitals")
+        self.app.title("Computah, make those things digital")
         self.app.geometry("1200x600")
 
         self.rows = []          # données brutes de la bdd
@@ -92,7 +92,7 @@ class App:
         self.tree.pack(fill="both", expand=True)
         self.tree.bind("<ButtonRelease-1>", self.on_click)
 
-        # --- Log rétro
+        # --- Log
         self.log_box = ScrolledText(pane, height=0, state="disabled", font=("Courier", 10))
         pane.add(self.log_box, stretch="always")
         for tag, color in (("red", "red"), ("blue", "blue"), ("green", "green")):

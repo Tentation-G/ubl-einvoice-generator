@@ -407,7 +407,7 @@ def add_attachment(output_doc : etree._Element, rowH : pyodbc.Row, NS : dict[str
     #f"{DOC_OUTPUT_PATH}{rowH.Control_TypeDoc}_{rowH.Control_DocNum}_{rowH.Control_CodeCient}_{rowH.BT2_FA_IssueDate}.xml"
 
     # TODO : Voir comment le file est recuperer pour ensuite le passer en parametre | in_file_name
-    file = ATTACHMENT_INPUT_PATH + "F202500001_INV_20250201_FX_Commentee_EN16931.pdf"
+    file = ATTACHMENT_INPUT_PATH + "FK20260123456789.pdf"
 
     attachment_name = f"{rowH.Control_TypeDoc}_{rowH.Control_DocNum}_{rowH.Control_CodeCient}_{rowH.BT2_FA_IssueDate}_attachment.pdf"
     with open(file, "rb") as f:
