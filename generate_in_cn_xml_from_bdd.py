@@ -16,7 +16,8 @@ INPUT_PATH            = os.path.join(BASE_DIR, "_input/")
 DOC_INPUT_PATH        = os.path.join(INPUT_PATH, "cleaned/")
 ATTACHMENT_INPUT_PATH = os.path.join(INPUT_PATH, "pj_test/")
 
-DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
+#DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
+DOC_OUTPUT_PATH = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - ICD Wilo Sesem - Documents/PRE_PROD_SOURCES_DEPOT/ICD_out/FR-DE-SESEM_e_invoice/QUALITY/OUT_TO_ICD/e_invoice/"
 
 INVOICE_TEMPLATE_INPUT     = DOC_INPUT_PATH + "UC5_INV_EN16931_CLEAN.xml"
 CREDIT_NOTE_TEMPLATE_INPUT = DOC_INPUT_PATH + "UC5b_CN_EN16931_CLEAN.xml"

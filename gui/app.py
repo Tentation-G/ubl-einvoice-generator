@@ -6,15 +6,24 @@ from tkinter.scrolledtext import ScrolledText
 from datetime import datetime as dt
 now = dt.now().strftime('%Y-%m-%d %H:%M:%S')
 
+import sys, os
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
 from generate_in_cn_xml_from_bdd import *
+
+#os.makedirs(output_path("_output"), exist_ok=True)
 
 # App param
 app = tk.Tk()
+app.title("Computah, make thoses things digitals")
 app.geometry("1200x600")
 
 # Recup bdd
 rows = []
 cols = ["", "Doc"]
+# TODO : il rafraichie rien celui la
 def update_data():
     global rows, cols
     rows = fetch_all_header()
@@ -29,7 +38,7 @@ def update_data():
         tree.heading(col, text=col)
         tree.column(col)
 
-    tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
+    tab_fill()
     log(f"> [INFO]        [{dt.now().strftime('%Y-%m-%d %H:%M:%S')}] : <Data up to date>")
 
 ## == Filtre ==
@@ -37,7 +46,7 @@ def update_data():
 search_var = tk.StringVar()
 frame_search = tk.Frame(app)
 frame_search.pack(fill="x", padx=2, pady=(10, 0))
-#tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
+tk.Label(frame_search, text=f"Rechercher ({cols[1]}) :").pack(side="left")
 tk.Entry(frame_search, textvariable=search_var, width=30).pack(side="left", padx=8)
 
 # Bouton refresh Data

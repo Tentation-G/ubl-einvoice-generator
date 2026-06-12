@@ -100,7 +100,7 @@
                     </cac:TaxScheme>
                </cac:PartyTaxScheme>
                <cac:PartyLegalEntity>
-                    <cbc:RegistrationName>[PLACEHOLDER]</cbc:RegistrationName>  <!-- BT-44 (Raison sociale de l'acheteur) : LE CLIENT -->
+                    <cbc:RegistrationName>[PLACEHOLDER]</cbc:RegistrationName>
                </cac:PartyLegalEntity>
                <cac:Contact>
                     <cbc:Telephone>[PLACEHOLDER]</cbc:Telephone>
