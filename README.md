@@ -19,8 +19,6 @@ xml_inv_cn_gen/
 │
 ├── _output/                     # Fichiers XML générés (pour test)
 │
-├── Archive/                     # Anciennes versions / archives
-│
 ├── gui/
 │   └── app.py                   # Interface graphique Tkinter
 │
