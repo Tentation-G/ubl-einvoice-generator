@@ -41,6 +41,8 @@ def clean(value):
 class App:
     def __init__(self):
         self.app = tk.Tk()
+        #self.app.icone = tk.PhotoImage(file="mon_icone.png")
+        #self.app.iconphoto(True, self.app.icone)
         self.app.title("Computah, make those things digital")
         self.app.geometry("1200x600")
 
@@ -213,7 +215,7 @@ class App:
         )
 
     def _row_id(self, iid):
-        return self.tree.item(iid, "values")[ID_COL + 1]  # +1 : colonne ✓ devant
+        return self.tree.item(iid, "values")[ID_COL + 0]  # +1 : colonne ✓ devant
 
     def set_check(self, iid, state):
         row_id = self._row_id(iid)
