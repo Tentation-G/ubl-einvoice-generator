@@ -15,7 +15,7 @@ xml_inv_cn_gen/
 │   ├── cleaned/                 # Templates XML nettoyés (utilisés en production)
 │   │   ├── UC5_INV_EN16931_CLEAN.xml
 │   │   └── UC5b_CN_EN16931_CLEAN.xml
-│   └── pj_test/                 # Pièces jointes de test
+│   └── default_attachment/      # Pièces jointes a inserer par defaut
 │
 ├── _output/                     # Fichiers XML générés (pour test)
 │
