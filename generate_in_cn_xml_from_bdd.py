@@ -35,8 +35,9 @@ ATTACHMENT_INPUT = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - 
 #ATTACHMENT_INPUT = "//fr-sd-divalto/DIVALTO_FICJOINTS/PROD/AchatVente/"
 
 # -- Output path --
-DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
-# DOC_OUTPUT_PATH = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - ICD Wilo Sesem - Documents/PRE_PROD_SOURCES_DEPOT/ICD_out/FR-DE-SESEM_e_invoice/QUALITY/OUT_TO_ICD/e_invoice/"
+#DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
+#DOC_OUTPUT_PATH = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - ICD Wilo Sesem - Documents/PRE_PROD_SOURCES_DEPOT/ICD_out/FR-DE-SESEM_e_invoice/QUALITY/OUT_TO_ICD/e_invoice/"
+DOC_OUTPUT_PATH = "//fr-sd-sql/FR-DE-SESEM_e_invoice$/QUALITY/OUT_TO_ICD/e_invoice/"
 
 # TODO : Case Chorus (B2G ? besoin champ additionnels ?)
 
@@ -303,7 +304,7 @@ def add_attachment(num_fact : int, output_doc : etree._Element, rowH : pyodbc.Ro
     """
     Ajout piece joint encodé en base64 dans le xml
     :param num_fact:
-        numero de document (fichier de facutre = num_fact.pdf)
+        numero de document (fichier de facture = num_fact.pdf)
     :param output_doc:
         document xml
     :param rowH:
@@ -319,19 +320,21 @@ def add_attachment(num_fact : int, output_doc : etree._Element, rowH : pyodbc.Ro
     if os.path.isfile(path):
         attachment = path
         attachment_name = f"{num_fact}.pdf"
+
+        with open(attachment, "rb") as f:
+            attachment_encoded = base64.b64encode(f.read()).decode("utf-8")
+
+        output_doc.find("cac:AdditionalDocumentReference/cbc:ID", namespaces=NS).text = "ATTACHMENT_001"
+        output_doc.find("cac:AdditionalDocumentReference/cbc:DocumentTypeCode", namespaces=NS).text = "916"
+
+        output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("mimeCode", "application/pdf")
+        output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("filename", attachment_name)
+        output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).text = attachment_encoded
+
     else:
-        attachment = DEFAULT_ATTACHMENT_INPUT
-        attachment_name = "00000000.pdf"
+        pass
 
-    with open(attachment, "rb") as f:
-        attachment_encoded = base64.b64encode(f.read()).decode("utf-8")
 
-    output_doc.find("cac:AdditionalDocumentReference/cbc:ID", namespaces=NS).text = "ATTACHMENT_001"
-    output_doc.find("cac:AdditionalDocumentReference/cbc:DocumentTypeCode", namespaces=NS).text = "916"
-
-    output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("mimeCode", "application/pdf")
-    output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).set("filename", attachment_name)
-    output_doc.find("cac:AdditionalDocumentReference/cac:Attachment/cbc:EmbeddedDocumentBinaryObject", namespaces=NS).text = attachment_encoded
 
 # L'authentique coeur de la machine
 def fact_bdd_to_xml(num_fact : int) -> None: # -> XML_UBL2
