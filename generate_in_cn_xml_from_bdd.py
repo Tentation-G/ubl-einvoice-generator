@@ -31,8 +31,8 @@ CREDIT_NOTE_TEMPLATE_INPUT = DOC_INPUT_PATH + "UC5b_CN_EN16931_CLEAN.xml"
 
 # -- Attachment path
 DEFAULT_ATTACHMENT_INPUT = ATTACHMENT_INPUT_PATH + "00000000.pdf"
-ATTACHMENT_INPUT = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - ICD Wilo Sesem - Documents/PRE_PROD_SOURCES_DEPOT/v0.1/ATTACHMENT/" # temp pour test
-#ATTACHMENT_INPUT = "//fr-sd-divalto/DIVALTO_FICJOINTS/PROD/AchatVente/"
+#ATTACHMENT_INPUT = "C:/Users/campeauxfl/WILO/Wilo_SESEM-IT-PROJETS-eINVOICING - ICD Wilo Sesem - Documents/PRE_PROD_SOURCES_DEPOT/v0.1/ATTACHMENT/" # temp pour test
+ATTACHMENT_INPUT = "//fr-sd-divalto/DIVALTO_FICJOINTS/PROD/AchatVente/"
 
 # -- Output path --
 #DOC_OUTPUT_PATH = os.path.join(BASE_DIR, "_output/")
