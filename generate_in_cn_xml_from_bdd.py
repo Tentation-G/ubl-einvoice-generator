@@ -44,7 +44,8 @@ DOC_OUTPUT_PATH = "//fr-sd-sql/FR-DE-SESEM_e_invoice$/QUALITY/OUT_TO_ICD/e_invoi
 ## Back Pour visu table en front
 SQL_SELECT_FOR_FRONT = f"""
         SELECT
-          [Control_DocNum]
+          [Control_TypeDoc]
+        , [Control_DocNum]
         , [Control_CodeCient]
         , [Control_NomClient]
         , [Control_CodeTVA]
